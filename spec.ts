@@ -3,7 +3,7 @@ interface DynamicDocumentFragmentBroker {
 }
 
 interface DynamicDocumentTemplate {
-  instantiate<A>(processor: DynamicTemplateProcessor<A>, processorArguments?: A): DynamicDocumentFragment<A>
+  instantiate<A>(processor?: DynamicTemplateProcessor<A>, processorArguments?: A): DynamicDocumentFragment<A>
 }
 
 interface DynamicTemplateProcessor<A> {
@@ -11,7 +11,7 @@ interface DynamicTemplateProcessor<A> {
 }
 
 interface DynamicDocumentFragment<PA> extends DocumentFragment {
-  readonly processor: DynamicTemplateProcessor<PA>
+  readonly processor: DynamicTemplateProcessor<PA> | null
   readonly parts: DynamicTemplatePartList
 }
 
