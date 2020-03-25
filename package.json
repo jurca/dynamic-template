@@ -1,0 +1,15 @@
+{
+  "name": "dynamic-template",
+  "version": "0.0.0",
+  "private": true,
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Martin Jurča <mjurca@centrum.cz>",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^3.8.3"
+  }
+}
