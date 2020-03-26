@@ -20,7 +20,7 @@ interface DynamicDocumentFragment<PA> extends DocumentFragment {
 interface DynamicTemplatePartList extends Iterable<DynamicTemplatePart> {
   readonly length: number
 
-  [index: number]: DynamicTemplatePart | undefined
+  readonly [index: number]: DynamicTemplatePart | undefined
   item(index: number): DynamicTemplatePart | null
   keys(): IterableIterator<number>
   values(): IterableIterator<DynamicTemplatePart>
