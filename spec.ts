@@ -71,10 +71,10 @@ interface NodeRange extends Iterable<Node> {
 
   [index: number]: Node | undefined
   item(index: number): Node | null
-  replaceNode(): void
-  insertBefore(): void
-  appendNode(): void
-  removeNode(): void
+  replaceNode(newNode: Node, oldNode: Node): void
+  insertBefore(newNode: Node, refNode: Node | null): void
+  appendNode(node: Node): void
+  removeNode(node: Node): void
   keys(): IterableIterator<number>
   values(): IterableIterator<Node>
   entries(): IterableIterator<[number, Node]>
