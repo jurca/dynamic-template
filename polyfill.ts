@@ -3,8 +3,65 @@ document.createDynamicTemplate = (htmlFragments: Readonly<ArrayLike<string>>): D
 }
 
 class DynamicDocumentTemplateImpl implements DynamicDocumentTemplate {
+  constructor(
+    private readonly parsedTemplate: DocumentFragment,
+  ) {
+  }
+
   instantiate<A>(processor?: DynamicTemplateProcessor<A>, processorArguments?: A): DynamicDocumentFragment<A> {
-    return undefined
+    const instanceFragment = this.parsedTemplate.cloneNode(true) as DocumentFragment
+    const parts: DynamicTemplatePart[] = []
+
+    const instance = Object.assign(instanceFragment, {
+      processor: processor || null,
+      parts: new DynamicTemplatePartListImpl(parts),
+    })
+    if (processor) {
+      processor(instance, processorArguments)
+    }
+
+    return instance
+  }
+}
+
+class DynamicTemplatePartListImpl implements DynamicTemplatePartList {
+  public readonly length: number
+  readonly [index: number]: DynamicTemplatePart | undefined
+
+  constructor(
+    private readonly parts: readonly DynamicTemplatePart[],
+  ) {
+    Object.assign(this, parts)
+    this.length = parts.length
+  }
+
+  public item(index: number): DynamicTemplatePart | null {
+    return this[index] || null
+  }
+
+  public keys(): IterableIterator<number> {
+    return this.parts.keys()
+  }
+
+  public values(): IterableIterator<DynamicTemplatePart> {
+    return this.parts.values()
+  }
+
+  public entries(): IterableIterator<[number, DynamicTemplatePart]> {
+    return this.parts.entries()
+  }
+
+  public forEach<T>(
+    callback: (this: T, value: DynamicTemplatePart, index: number, list: DynamicTemplatePartList) => void,
+    thisValue?: T,
+  ): void {
+    this.parts.forEach((value, index) => {
+      callback.call(thisValue as T, value, index, this)
+    })
+  }
+
+  public [Symbol.iterator](): Iterator<DynamicTemplatePart> {
+    return this.parts[Symbol.iterator]()
   }
 }
 
