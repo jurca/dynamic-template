@@ -1,3 +1,5 @@
+interface Document extends DynamicDocumentFragmentBroker {}
+
 interface DynamicDocumentFragmentBroker {
   createDynamicTemplate(htmlFragments: ArrayLike<string>): DynamicDocumentTemplate
 }
