@@ -67,7 +67,7 @@ interface DynamicTemplateNodeRangePart<PA> extends DynamicTemplatePart {
 
 interface NodeRange extends Iterable<Node> {
   readonly length: number
-  readonly parentNode: Node | null
+  readonly parentNode: Node
 
   [index: number]: Node | undefined
   item(index: number): Node | null
