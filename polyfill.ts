@@ -1,4 +1,4 @@
-document.createDynamicTemplate = (htmlFragments: Readonly<ArrayLike<string>>): DynamicDocumentTemplate => {
+document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicDocumentTemplate => {
   return undefined
 }
 

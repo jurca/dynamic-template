@@ -1,7 +1,7 @@
 interface Document extends DynamicDocumentFragmentBroker {}
 
 interface DynamicDocumentFragmentBroker {
-  createDynamicTemplate(htmlFragments: ArrayLike<string>): DynamicDocumentTemplate
+  createDynamicTemplate(...htmlFragments: readonly string[]): DynamicDocumentTemplate
 }
 
 interface DynamicDocumentTemplate {
