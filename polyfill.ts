@@ -10,7 +10,35 @@ class DynamicDocumentTemplateImpl implements DynamicDocumentTemplate {
 
   instantiate<A>(processor?: DynamicTemplateProcessor<A>, processorArguments?: A): DynamicDocumentFragment<A> {
     const instanceFragment = this.parsedTemplate.cloneNode(true) as DocumentFragment
+    const placesWithDynamicParts = instanceFragment.querySelectorAll(
+      '[data-dtpp-attributes],[data-dtpp-nodes]',
+    )
     const parts: DynamicTemplatePart[] = []
+    for (let i = 0, {length} = placesWithDynamicParts; i < length; i++) {
+      const place = placesWithDynamicParts[i]
+      const attributes = place.getAttribute('data-dtpp-attributes')
+      if (attributes) {
+        for (const attribute of attributes.split(';')) {
+          if (attribute) {
+            parts.push(new DynamicTemplateAttributePartImpl(place, place.getAttributeNode(attribute)!))
+          } else {
+            parts.push(new DynamicTemplateElementPartImpl(place))
+          }
+        }
+        place.removeAttribute('data-dtpp-attributes')
+      }
+      if (place.hasAttribute('data-dtpp-nodes')) {
+        const start = document.createComment('')
+        const end = document.createComment('')
+        place.parentNode!.replaceChild(end, place)
+        end.parentNode!.insertBefore(start, end)
+        const nodeRange = new NodeRangeImpl(end.parentNode!, start, end)
+        parts.push(new DynamicTemplateNodeRangePartImpl(
+          end.parentNode as Element | DynamicDocumentFragment<A>,
+          nodeRange,
+        ))
+      }
+    }
 
     const instance = Object.assign(instanceFragment, {
       processor: processor || null,
