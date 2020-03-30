@@ -1,5 +1,52 @@
 document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicDocumentTemplate => {
-  return undefined
+  const isSvg = () => {
+    const SVG_ONLY_ELEMENTS = [
+      'altGlyph', 'altGlyphDef', 'altGlyphItem', 'animate', 'animateColor', 'animateMotion', 'animateTransform',
+      'circle', 'clipPath', 'color-profile', 'cursor', 'defs', 'desc', 'ellipse', 'feBlend', 'feColorMatrix',
+      'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap',
+      'feDistantLight', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR', 'feGaussianBlur', 'feImage', 'feMerge',
+      'feMergeNode', 'feMorphology', 'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile',
+      'feTurbulence', 'filter', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 'font-face-uri',
+      'foreignObject', 'g', 'glyph', 'glyphRef', 'hkern', 'line', 'linearGradient', 'marker', 'mask', 'metadata',
+      'missing-glyph', 'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialGradient', 'rect', 'set', 'stop',
+      'switch', 'symbol', 'text', 'textPath', 'tref', 'tspan', 'use', 'view', 'vkern',
+    ]
+    // Element names shared by SVG and HTML
+    const SHARED_ELEMENTS = ['a', 'font', 'image', 'script', 'style', 'title']
+
+    const completeMarkup = htmlFragments.join('')
+    const firstElementStart = completeMarkup.indexOf('<')
+    if (firstElementStart === -1) {
+      return false
+    }
+
+    const firstElementName = completeMarkup.slice(firstElementStart).match(/^\s*([^\s:=/>]+)/)?.[1]
+    if (!firstElementName) {
+      throw new Error(`Invalid markup - missing element name at position ${firstElementStart}: ${completeMarkup}`)
+    }
+
+    if (SVG_ONLY_ELEMENTS.includes(firstElementName)) {
+      return true
+    }
+    if (!SHARED_ELEMENTS.includes(firstElementName)) {
+      return false
+    }
+
+    try {
+      const parser = new DOMParser()
+      // An SVG markup must be a well-formed XML
+      const parsedMarkup = parser.parseFromString(completeMarkup, 'text/xml')
+      const caseInsensitiveParsedMarkup = parser.parseFromString(completeMarkup, 'text/html')
+      if (caseInsensitiveParsedMarkup.querySelector('svg')) {
+        return false
+      }
+
+      // Let's call this an educated guess that works reliably enough
+      return !!parsedMarkup.querySelector(`[${SVG_ONLY_ELEMENTS}]`)
+    } catch (parsingError) {
+      return false
+    }
+  }
 }
 
 class DynamicDocumentTemplateImpl implements DynamicDocumentTemplate {
