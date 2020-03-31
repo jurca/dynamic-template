@@ -1,3 +1,5 @@
+const HIDDEN_NODE_FLAG = Symbol('DYNAMIC_TEMPLATE_HIDDEN_NODE')
+
 document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicDocumentTemplate => {
   const isSvg = () => {
     const SVG_ONLY_ELEMENTS = [
@@ -80,6 +82,12 @@ class DynamicDocumentTemplateImpl implements DynamicDocumentTemplate {
       if (place.hasAttribute('data-dtpp-nodes')) {
         const start = document.createComment('')
         const end = document.createComment('')
+        Object.defineProperty(start, HIDDEN_NODE_FLAG, {
+          value: true,
+        })
+        Object.defineProperty(end, HIDDEN_NODE_FLAG, {
+          value: true,
+        })
         place.parentNode!.replaceChild(end, place)
         end.parentNode!.insertBefore(start, end)
         const nodeRange = new NodeRangeImpl(end.parentNode!, start, end)
@@ -93,6 +101,7 @@ class DynamicDocumentTemplateImpl implements DynamicDocumentTemplate {
     const instance = Object.assign(instanceFragment, {
       processor: processor || null,
       parts: new DynamicTemplatePartListImpl(parts),
+      rootNodes: new LiveRootNodeListImpl(instanceFragment.firstChild!, instanceFragment.lastChild!),
     })
     if (processor) {
       processor(instance, processorArguments)
@@ -398,6 +407,111 @@ class NodeRangeImpl implements NodeRange {
 
   public forEach<T>(
     callback: (this: T, value: Node, index: number, list: NodeRange) => void,
+    thisValue?: T,
+  ): void {
+    for (const [index, node] of this.entries()) {
+      callback.call(thisValue as T, node, index, this)
+    }
+  }
+
+  public [Symbol.iterator](): IterableIterator<Node> {
+    return this.values()
+  }
+}
+
+class LiveRootNodeListImpl implements NodeList {
+  [index: number]: Node
+
+  constructor(
+    private readonly firstNode: Node,
+    private readonly lastNode: Node,
+  ) {
+    return new Proxy(this, {
+      has(target: LiveRootNodeListImpl, propertyKey: string | number | symbol): boolean {
+        if (typeof propertyKey === 'number') {
+          return !!target.item(propertyKey)
+        }
+        return Reflect.has(target, propertyKey)
+      },
+      get(target: LiveRootNodeListImpl, propertyKey: string | number | symbol): any {
+        if (typeof propertyKey === 'number') {
+          return target.item(propertyKey) || undefined
+        }
+        return target[propertyKey as any]
+      },
+      ownKeys(target: LiveRootNodeListImpl): PropertyKey[] {
+        const keys = Reflect.ownKeys(target)
+        const {length} = target
+        for (let index = 0; index < length; index++) {
+          keys.push(index)
+        }
+        return keys
+      },
+    })
+  }
+
+  public get length(): number {
+    let length = 0
+    for (const _ of this.entries()) {
+      length++
+    }
+    return length
+  }
+
+  public item(index: number): Node | null {
+    let currentIndex = 0
+    for (const node of this.values()) {
+      if (currentIndex === index) {
+        return node
+      }
+      currentIndex++
+    }
+
+    return null
+  }
+
+  public entries(): IterableIterator<[number, Node]> {
+    let node: Node | null = this.firstNode
+    const {lastNode} = this
+    while (node && node !== lastNode && (node as any)[HIDDEN_NODE_FLAG]) {
+      node = node.nextSibling
+    }
+
+    return function*(): IterableIterator<[number, Node]> {
+      let key = 0
+      while (node) {
+        if (!(node as any)[HIDDEN_NODE_FLAG]) {
+          yield [key, node]
+          key++
+        }
+        if (node === lastNode) {
+          break
+        }
+        node = node.nextSibling
+      }
+    }()
+  }
+
+  public keys(): IterableIterator<number> {
+    const nodeList = this
+    return function*(): IterableIterator<number> {
+      for (const [key] of nodeList.entries()) {
+        yield key
+      }
+    }()
+  }
+
+  public values(): IterableIterator<Node> {
+    const nodeList = this
+    return function*(): IterableIterator<Node> {
+      for (const [, node] of nodeList.entries()) {
+        yield node
+      }
+    }()
+  }
+
+  public forEach<T>(
+    callback: (this: T, value: Node, index: number, list: NodeList) => void,
     thisValue?: T,
   ): void {
     for (const [index, node] of this.entries()) {

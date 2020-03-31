@@ -15,6 +15,7 @@ interface DynamicTemplateProcessor<A> {
 interface DynamicDocumentFragment<PA> extends DocumentFragment {
   readonly processor: DynamicTemplateProcessor<PA> | null
   readonly parts: DynamicTemplatePartList
+  readonly rootNodes: NodeList // live
 }
 
 interface DynamicTemplatePartList extends Iterable<DynamicTemplatePart> {
