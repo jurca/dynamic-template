@@ -65,12 +65,15 @@ class DynamicDocumentTemplateImpl implements DynamicDocumentTemplate {
       const place = placesWithDynamicParts[i]
       const attributes = place.getAttribute('data-dtpp-attributes')
       if (attributes) {
+        const partsForAttributes = new Map<string, DynamicTemplatePart>() // Used for deduplication
         for (const attribute of attributes.split(';')) {
-          if (attribute) {
-            parts.push(new DynamicTemplateAttributePartImpl(place, place.getAttributeNode(attribute)!))
-          } else {
-            parts.push(new DynamicTemplateElementPartImpl(place))
-          }
+          const part = partsForAttributes.get(attribute) || (attribute ?
+            new DynamicTemplateAttributePartImpl(place, place.getAttributeNode(attribute)!)
+          :
+            new DynamicTemplateElementPartImpl(place)
+          )
+          partsForAttributes.set(attribute, part)
+          parts.push(part)
         }
         place.removeAttribute('data-dtpp-attributes')
       }
