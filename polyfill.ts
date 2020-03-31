@@ -1,6 +1,10 @@
 const HIDDEN_NODE_FLAG = Symbol('DYNAMIC_TEMPLATE_HIDDEN_NODE')
 
 document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicDocumentTemplate => {
+  if (!htmlFragments.length || (htmlFragments.length === 1 && !htmlFragments)) {
+    throw new Error('At least one html fragment must be provided, and the fragment must not be an empty string')
+  }
+
   const isSvg = () => {
     const SVG_ONLY_ELEMENTS = [
       'altGlyph', 'altGlyphDef', 'altGlyphItem', 'animate', 'animateColor', 'animateMotion', 'animateTransform',
