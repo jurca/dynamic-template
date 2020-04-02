@@ -5,7 +5,7 @@ document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicD
     throw new Error('At least one html fragment must be provided, and the fragment must not be an empty string')
   }
 
-  const isSvg = () => {
+  const isSvg = (() => {
     const SVG_ONLY_ELEMENTS = [
       'altGlyph', 'altGlyphDef', 'altGlyphItem', 'animate', 'animateColor', 'animateMotion', 'animateTransform',
       'circle', 'clipPath', 'color-profile', 'cursor', 'defs', 'desc', 'ellipse', 'feBlend', 'feColorMatrix',
@@ -52,7 +52,118 @@ document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicD
     } catch (parsingError) {
       return false
     }
+  })()
+
+  const currentDynamicAttributes: string[] = []
+  let isInsideElement = false
+  let isInsideComment = false
+  const processedFragments = htmlFragments.map((fragment, fragmentIndex, {length: fragmentCount}) => {
+    let currentPosition = 0
+    do {
+      if (isInsideComment) {
+        currentPosition = fragment.indexOf('-->', currentPosition)
+        if (currentPosition === -1) {
+          throw new Error(
+            `The ${fragmentIndex}. fragment contains an unterminated comment. Dynamic comments are not supported`,
+          )
+        }
+        currentPosition += 4
+        isInsideComment = false
+      } else if (isInsideElement) {
+        const elementEnd = fragment.indexOf('>', currentPosition)
+        if (elementEnd === -1) { // Dynamic attribute or element
+          const valueSeparator = fragment.lastIndexOf('=', elementEnd)
+          if (valueSeparator === -1) {
+            currentDynamicAttributes.push('')
+          } else {
+            if (/^\s*(?:"[^"]*"|'[^']*'|\S*(?:\s|$))/.test(fragment.slice(valueSeparator + 1))) {
+              // The last attribute before this fragment's end is already fully-formed
+              currentDynamicAttributes.push('')
+            } else {
+              let attributeNameEnd = valueSeparator - 1
+              while (/s/.test(fragment.charAt(attributeNameEnd))) {
+                attributeNameEnd--
+              }
+              let attributeNameStart = attributeNameEnd
+              while (attributeNameStart && /\S/.test(fragment.charAt(attributeNameStart - 1))) {
+                attributeNameStart--
+              }
+              const attributeName = fragment.slice(attributeNameStart, attributeNameEnd + 1)
+              currentDynamicAttributes.push(attributeName)
+            }
+          }
+          currentPosition = -1
+        } else {
+          // Skip attributes of the current element up to the position of potential element end
+          while (true) {
+            const nextAttributeValueDelimiterIndex = fragment.slice(0, elementEnd).indexOf('=', currentPosition)
+            if (nextAttributeValueDelimiterIndex === -1) {
+              break
+            }
+            currentPosition = nextAttributeValueDelimiterIndex + 1
+            while (/\s/.test(fragment.charAt(currentPosition))) {
+              currentPosition++
+            }
+            if (/["']/.test(fragment.charAt(currentPosition))) {
+              const valueDelimiter = fragment.charAt(currentPosition)
+              currentPosition = fragment.indexOf(valueDelimiter, currentPosition) + 1
+            } else {
+              while (/[^\s>]/.test(fragment.charAt(currentPosition))) {
+                currentPosition++
+              }
+            }
+          }
+          if (currentPosition > elementEnd) {
+            // This was a false positive, the ">" character was inside an attribute's value
+          } else {
+            isInsideElement = false
+            if (currentDynamicAttributes.length) {
+              const dynamicAttributesNote = ` data-dtpp-attributes="${currentDynamicAttributes.splice(0).join(';')}"`
+              fragment = fragment.slice(0, elementEnd) + dynamicAttributesNote + fragment.slice(elementEnd)
+              currentPosition = elementEnd + dynamicAttributesNote.length + 1
+            } else {
+              currentPosition = elementEnd + 1
+            }
+          }
+        }
+      } else {
+        currentPosition = fragment.indexOf('<', currentPosition)
+        if (currentPosition > -1) {
+          if (fragment.startsWith('<!--', currentPosition)) {
+            isInsideComment = true
+            currentPosition += 4
+          } else {
+            isInsideElement = true
+            do {
+              currentPosition++
+            } while (/\s/.test(fragment.charAt(currentPosition)))
+            while (/[^\s:=/>]/.test(fragment.charAt(currentPosition))) {
+              currentPosition++
+            }
+            do {
+              currentPosition++
+            } while (/\s/.test(fragment.charAt(currentPosition)))
+          }
+        } else if (fragmentIndex < fragmentCount - 1) {
+          const markerElement = isSvg ? 'g' : 'div'
+          fragment += `<${markerElement} data-dtpp-nodes=""></${markerElement}>`
+        }
+      }
+    } while (currentPosition > -1)
+    return fragment
+  })
+
+  const template = document.createElement('template')
+  template.innerHTML = isSvg ? `<svg>${processedFragments.join('')}</svg>` : processedFragments.join('')
+  if (isSvg) {
+    const svgRoot = template.content.firstElementChild!
+    while (svgRoot.firstChild) {
+      template.content.insertBefore(svgRoot.firstChild, svgRoot)
+    }
+    template.content.removeChild(svgRoot)
   }
+
+  return new DynamicDocumentTemplateImpl(template.content)
 }
 
 class DynamicDocumentTemplateImpl implements DynamicDocumentTemplate {
