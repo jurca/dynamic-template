@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Dynamic template and document fragment demos &ndash; Counter demo</title>
+  </head>
+  <body>
+    <a href="index.html">Return to list of all demos</a>
+    <div id="app"></div>
+    <script src="spec.js"></script>
+    <script src="polyfill.js"></script>
+    <script>
+      (() => {
+        const appContainer = document.getElementById('app')
+        const uiTemplate = document.createDynamicTemplate(`
+          <p>
+            Incrementing counter: `, `
+          </p>
+        `)
+
+        let counter = 0
+        const ui = uiTemplate.instantiate((templateInstance, templateArgs) => {
+          templateInstance.parts[0].replaceWith(templateArgs)
+        }, counter)
+        appContainer.appendChild(ui)
+
+        setInterval(() => {
+          counter++
+          ui.processor(ui, counter)
+        }, 1000)
+      })()
+    </script>
+  </body>
+</html>
