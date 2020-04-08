@@ -3,9 +3,10 @@
     "target": "ESNext",
     "module": "None",
     "declaration": true,
-    "sourceMap": true,
-    "outDir": "./dist",
+    "outDir": "./docs",
     "rootDir": "./",
+    "inlineSourceMap": true,
+    "inlineSources": true,
 
     "strict": true,
 
