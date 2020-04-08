@@ -64,7 +64,8 @@ document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicD
         currentPosition = fragment.indexOf('-->', currentPosition)
         if (currentPosition === -1) {
           throw new Error(
-            `The ${fragmentIndex}. fragment contains an unterminated comment. Dynamic comments are not supported`,
+            `The ${fragmentIndex}. fragment contains an unterminated comment. Dynamic comments are not supported by ` +
+            `this polyfill.`,
           )
         }
         currentPosition += 4
@@ -271,6 +272,7 @@ abstract class AbstractDynamicTemplatePart<P extends PartType> implements Dynami
   public readonly ATTRIBUTE_PART: PartType.ATTRIBUTE_PART = PartType.ATTRIBUTE_PART
   public readonly ELEMENT_PART: PartType.ELEMENT_PART = PartType.ELEMENT_PART
   public readonly NODE_RANGE_PART: PartType.NODE_RANGE_PART = PartType.NODE_RANGE_PART
+  public readonly COMMENT_PART: PartType.COMMENT_PART = PartType.COMMENT_PART
 
   protected constructor(
     public readonly partType: P,

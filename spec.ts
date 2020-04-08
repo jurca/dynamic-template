@@ -36,12 +36,14 @@ enum PartType {
   ATTRIBUTE_PART,
   ELEMENT_PART,
   NODE_RANGE_PART,
+  COMMENT_PART,
 }
 
 interface DynamicTemplatePart {
   readonly ATTRIBUTE_PART: PartType.ATTRIBUTE_PART
   readonly ELEMENT_PART: PartType.ELEMENT_PART
   readonly NODE_RANGE_PART: PartType.NODE_RANGE_PART
+  readonly COMMENT_PART: PartType.COMMENT_PART
 
   readonly partType: PartType
 }
@@ -64,6 +66,12 @@ interface DynamicTemplateNodeRangePart<PA> extends DynamicTemplatePart {
   readonly parentNode: Element | DynamicDocumentFragment<PA>
   readonly nodes: NodeRange
   replaceWith(...nodes: ReadonlyArray<string | Node>): void
+}
+
+interface DynamicTemplateCommentPart extends DynamicTemplatePart {
+  readonly partType: PartType.COMMENT_PART
+  readonly node: Comment
+  value: string
 }
 
 interface NodeRange extends Iterable<Node> {
