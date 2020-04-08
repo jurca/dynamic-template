@@ -146,7 +146,7 @@ document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicD
             }
           }
         } else if (fragmentIndex < fragmentCount - 1) {
-          const markerElement = isSvg ? 'g' : 'div'
+          const markerElement = isSvg ? 'g' : 'span'
           fragment += `<${markerElement} data-dtpp-nodes=""></${markerElement}>`
         }
       }
