@@ -26,7 +26,7 @@ document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicD
       return false
     }
 
-    const firstElementName = completeMarkup.slice(firstElementStart).match(/^\s*([^\s:=/>]+)/)?.[1]
+    const firstElementName = completeMarkup.slice(firstElementStart + 1).match(/^\s*([^\s:=/>]+)/)?.[1]
     if (!firstElementName) {
       throw new Error(`Invalid markup - missing element name at position ${firstElementStart}: ${completeMarkup}`)
     }
