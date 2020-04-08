@@ -336,18 +336,18 @@ class DynamicTemplateNodeRangePartImpl<PA>
     const currentTextNodes = currentNodes.filter(node => node.nodeType === node.TEXT_NODE) as Text[]
     const currentTextNodesMappableToNewStrings = currentTextNodes.filter(textNode => !nodes.includes(textNode))
     const normalizedNodes: Node[] = nodes.map(node => {
-      if (typeof node === 'string') {
-        const reusableNodeIndex = currentTextNodesMappableToNewStrings.findIndex(
-          textNode => textNode.nodeValue === node
-        )
-        if (reusableNodeIndex > -1) {
-          const reusableNode = currentTextNodesMappableToNewStrings.splice(reusableNodeIndex, 1)[0]
-          return reusableNode
-        }
-        return document.createTextNode(node)
+      if (node instanceof Node) {
+        return node
       }
 
-      return node
+      const reusableNodeIndex = currentTextNodesMappableToNewStrings.findIndex(
+        textNode => textNode.nodeValue === node
+      )
+      if (reusableNodeIndex > -1) {
+        const reusableNode = currentTextNodesMappableToNewStrings.splice(reusableNodeIndex, 1)[0]
+        return reusableNode
+      }
+      return document.createTextNode(node)
     })
 
     // Remove the nodes that are no longer in the input
