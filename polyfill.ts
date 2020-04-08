@@ -141,9 +141,9 @@ document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicD
             while (/[^\s:=/>]/.test(fragment.charAt(currentPosition))) {
               currentPosition++
             }
-            do {
+            while (/\s/.test(fragment.charAt(currentPosition))) {
               currentPosition++
-            } while (/\s/.test(fragment.charAt(currentPosition)))
+            }
           }
         } else if (fragmentIndex < fragmentCount - 1) {
           const markerElement = isSvg ? 'g' : 'div'
