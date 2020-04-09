@@ -1,0 +1,92 @@
+<!DOCTYPE>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Dynamic template and document fragment demos &ndash; Clock demo</title>
+
+    <style>
+      .clock {
+        display: flex;
+
+        width: 250px;
+        height: 250px;
+
+        justify-content: center;
+        align-items: center;
+      }
+
+      .center {
+        position: relative;
+
+        border-radius: 100%;
+        width: 20px;
+        height: 20px;
+
+        background: currentColor;
+      }
+
+      .hand {
+        position: absolute;
+        left: 50%;
+        bottom: 50%;
+
+        background: currentColor;
+
+        transform: translateX(-50%) rotate(calc(var(--segment-index, 0) * 6deg));
+        transform-origin: center bottom;
+      }
+
+      .hour {
+        width: 16px;
+        height: 60px;
+
+        --segment-index: calc(var(--hour, 0) * 5);
+      }
+
+      .minute {
+        width: 10px;
+        height: 110px;
+      }
+
+      .second {
+        width: 4px;
+        height: 110px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src="spec.js"></script>
+    <script src="polyfill.js"></script>
+    <script>
+      (() => {
+        const appContainer = document.getElementById('app')
+        const uiTemplate = document.createDynamicTemplate(`
+          <div class="clock">
+            <div class="center">
+              <div class="hand hour" style="`, `"></div>
+              <div class="hand minute" style="`, `"></div>
+              <div class="hand second" style="`, `"></div>
+            </div>
+          </div>
+        `)
+
+        const ui = uiTemplate.instantiate((templateInstance) => {
+          const now = new Date()
+          const [hours, minutes, seconds] = [now.getHours(), now.getMinutes(), now.getSeconds()]
+          const [{attribute: hoursStyle}, {attribute: minutesStyle}, {attribute: secondsStyle}] = templateInstance.parts
+          hoursStyle.value = `--hour: ${hours}`
+          minutesStyle.value = `--segment-index: ${minutes}`
+          secondsStyle.value = `--segment-index: ${seconds}`
+        })
+        appContainer.appendChild(ui)
+
+        setTimeout(update, 1000 - Date.now() % 1000)
+        function update() {
+          ui.processor(ui)
+          setTimeout(update, 1000 - Date.now() % 1000)
+        }
+      })()
+    </script>
+  </body>
+</html>
