@@ -73,11 +73,11 @@ document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicD
       } else if (isInsideElement) {
         const elementEnd = fragment.indexOf('>', currentPosition)
         if (elementEnd === -1) { // Dynamic attribute or element
-          const valueSeparator = fragment.lastIndexOf('=', elementEnd)
+          const valueSeparator = fragment.lastIndexOf('=')
           if (valueSeparator === -1) {
             currentDynamicAttributes.push('')
           } else {
-            if (/^\s*(?:"[^"]*"|'[^']*'|\S*(?:\s|$))/.test(fragment.slice(valueSeparator + 1))) {
+            if (/^\s*(?:"[^"]*"|'[^']*'|[^\s"']*(?:\s|$))/.test(fragment.slice(valueSeparator + 1))) {
               // The last attribute before this fragment's end is already fully-formed
               currentDynamicAttributes.push('')
             } else {
