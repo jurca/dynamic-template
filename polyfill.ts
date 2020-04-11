@@ -1,5 +1,3 @@
-const HIDDEN_NODE_FLAG = Symbol('DYNAMIC_TEMPLATE_HIDDEN_NODE')
-
 document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicDocumentTemplate => {
   if (!htmlFragments.length || (htmlFragments.length === 1 && !htmlFragments)) {
     throw new Error('At least one html fragment must be provided, and the fragment must not be an empty string')
@@ -198,12 +196,6 @@ class DynamicDocumentTemplateImpl implements DynamicDocumentTemplate {
       if (place.hasAttribute('data-dtpp-nodes')) {
         const start = document.createComment('')
         const end = document.createComment('')
-        Object.defineProperty(start, HIDDEN_NODE_FLAG, {
-          value: true,
-        })
-        Object.defineProperty(end, HIDDEN_NODE_FLAG, {
-          value: true,
-        })
         place.parentNode!.replaceChild(end, place)
         end.parentNode!.insertBefore(start, end)
         const nodeRange = new NodeRangeImpl(end.parentNode!, start, end)
@@ -590,17 +582,12 @@ class LiveRootNodeListImpl implements NodeList {
   public entries(): IterableIterator<[number, Node]> {
     let node: Node | null = this.firstNode
     const {lastNode} = this
-    while (node && node !== lastNode && (node as any)[HIDDEN_NODE_FLAG]) {
-      node = node.nextSibling
-    }
 
     return function*(): IterableIterator<[number, Node]> {
       let key = 0
       while (node) {
-        if (!(node as any)[HIDDEN_NODE_FLAG]) {
-          yield [key, node]
-          key++
-        }
+        yield [key, node]
+        key++
         if (node === lastNode) {
           break
         }
