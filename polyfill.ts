@@ -451,7 +451,7 @@ class NodeRangeImpl implements NodeRange {
     })
   }
 
-  get length(): number {
+  public get length(): number {
     let countedNode = this.startingBoundary.nextSibling
     let count = 0
     while (countedNode && countedNode !== this.endingBoundary) {
