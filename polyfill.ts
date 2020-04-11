@@ -1,4 +1,13 @@
 document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicDocumentTemplate => {
+  // A "real" polyfill or native implementation would not need to inject any helper attributes or elements, as it can
+  // just keep track of which nodes and places in child nodes will be dynamic, and store that information in a separate
+  // object. I assume that, to implement such behavior, a polyfill would need to parse the HTML code the same way a
+  // browser's HTML parser would (i.e. handle malformed HTML or incorrect element nesting correctly).
+  // Also, a native implementation (or a more advanced polyfill) can provide a more reliable SVG support. All that's
+  // needed for that is to hook into Node.prototype.{append,appendChild,insertBefore,...} and check whether the dynamic
+  // template is being injected into an SVG context or HTML context. However, as the code below demonstrates, in many
+  // situations it can be determined from the provided markup itself whether it's SVG or HTML code.
+
   if (!htmlFragments.length || (htmlFragments.length === 1 && !htmlFragments)) {
     throw new Error('At least one html fragment must be provided, and the fragment must not be an empty string')
   }
