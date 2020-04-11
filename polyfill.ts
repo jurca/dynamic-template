@@ -302,7 +302,7 @@ class DynamicTemplateAttributePartImpl
     if (typeof value === 'string') {
       this.attribute.value = value
       this.element.setAttributeNode(this.attribute)
-    } else {
+    } else if (this.element.hasAttribute(this.attribute.name)) {
       this.element.removeAttributeNode(this.attribute)
     }
   }
