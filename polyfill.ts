@@ -89,7 +89,7 @@ document.createDynamicTemplate = (...htmlFragments: readonly string[]): DynamicD
               currentDynamicAttributes.push('')
             } else {
               let attributeNameEnd = valueSeparator - 1
-              while (/s/.test(fragment.charAt(attributeNameEnd))) {
+              while (/\s/.test(fragment.charAt(attributeNameEnd))) {
                 attributeNameEnd--
               }
               let attributeNameStart = attributeNameEnd
