@@ -207,9 +207,8 @@ class DynamicDocumentTemplateImpl implements DynamicDocumentTemplate {
         const end = document.createComment('')
         place.parentNode!.replaceChild(end, place)
         end.parentNode!.insertBefore(start, end)
-        const nodeRange = new NodeRangeImpl(end.parentNode!, start, end)
+        const nodeRange = new NodeRangeImpl(start, end)
         parts.push(new DynamicTemplateNodeRangePartImpl(
-          end.parentNode as Element | DynamicDocumentFragment<A>,
           nodeRange,
         ))
       }
@@ -324,10 +323,13 @@ class DynamicTemplateNodeRangePartImpl<PA>
   implements DynamicTemplateNodeRangePart<PA>
 {
   constructor(
-    public readonly parentNode: Element | DynamicDocumentFragment<PA>,
     public readonly nodes: NodeRange,
   ) {
     super(PartType.NODE_RANGE_PART);
+  }
+
+  public get parentNode(): Element | DynamicDocumentFragment<PA> {
+    return this.nodes.parentNode as Element | DynamicDocumentFragment<PA>
   }
 
   public replaceWith(...nodes: ReadonlyArray<string | Node>): void {
@@ -389,7 +391,6 @@ class NodeRangeImpl implements NodeRange {
   [index: number]: Node | undefined;
 
   constructor(
-    public readonly parentNode: Node,
     private readonly startingBoundary: Comment,
     private readonly endingBoundary: Comment,
   ) {
@@ -449,6 +450,19 @@ class NodeRangeImpl implements NodeRange {
         return keys
       },
     })
+  }
+
+  public get parentNode(): Node {
+    const parentNode = this.startingBoundary.parentNode
+    if (!parentNode) {
+      // This should (might?) be preventable in a native implementation since it might not have to rely on boundary
+      // nodes.
+      throw new Error(
+        'The boundary nodes used by this polyfill no longer have a parent node because they were removed from it by ' +
+        'a third party. Therefore, the parent node of this node range cannot be located.',
+      )
+    }
+    return parentNode
   }
 
   public get length(): number {
