@@ -13,8 +13,8 @@ of tests for verifying potential implementations in browsers.
 
 ## Live demos
 
-Demos are available at the following link:
-https://jurca.github.io/dynamic-template/
+Demos are available at the following location:
+https://jurca.github.io/dynamic-template/index.html
 
 Some demos contain additional comments in the source code. Furthermore, there
 are comments in the polyfill itself elaborating on the intended behavior of a
