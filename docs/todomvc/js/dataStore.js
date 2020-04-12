@@ -1,0 +1,5 @@
+function dataStoreFactory() {
+	return {
+		items: [],
+	}
+}
