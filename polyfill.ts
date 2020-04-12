@@ -217,7 +217,7 @@ class DynamicDocumentTemplateImpl implements DynamicDocumentTemplate {
     const instance = Object.assign(instanceFragment, {
       processor: processor || null,
       parts: new DynamicTemplatePartListImpl(parts),
-      rootNodes: new LiveRootNodeListImpl(instanceFragment.firstChild!, instanceFragment.lastChild!),
+      rootNodes: new LiveRootNodeListImpl(instanceFragment),
     })
     if (processor) {
       processor(instance, processorArguments)
@@ -552,12 +552,35 @@ class NodeRangeImpl implements NodeRange {
 }
 
 class LiveRootNodeListImpl implements NodeList {
+  // Implementation note: a "real" polyfill (or a native implementation) would hook into
+  // Node.prototype.{append,appendChild,insertBefore,...} to keep track of all nodes that got inserted by a 3rd party
+  // after the first node and before the last, as well as other modifications to the sequence of nodes tracked by this
+  // NodeList.
+  // Since the DynamicDocumentFragment.prototype.rootNodes is used to keep track of the nodes at the root of the given
+  // dynamic document fragment to enable template composition, event after it has been added to a Node's childNodes
+  // (either via appendChild or using some other method), it is necessary to also correctly handle any modifications to
+  // the tracked sequence of nodes, assuming that all modifications are desired.
+  // The node list is meant to be live, reacting to the following operations as described below:
+  // * Inserting a node after the first node of this node list but before the last node of this node list - the inserted
+  //   node becomes a part of the node list.
+  // * Moving a tracked node to a different position in the sequence, including right before the current first node or
+  //   right after the last node of the tracked nodes - this updates the order of the tracked nodes
+  // * Removing a tracked node from the sequence - has no effect on this node list. This enables temporary removal of
+  //   parts of UI. Inserting the node to DOM afterwards will have an effect depending on where the node is inserted.
+  // * Move a tracked node to a different position outside the sequence, including to a higher or lower point in node
+  //   hierarchy - removes the node from the tracked nodes. Any dynamic template part referencing the node or any of its
+  //   descendants become inactive.
+  //
+  // The implementation below is largely simplified and does not implement the behavior described above, it only serves
+  // to demonstrate this concept and enable basic experimentation.
+
   [index: number]: Node
 
-  constructor(
-    private readonly firstNode: Node,
-    private readonly lastNode: Node,
-  ) {
+  private readonly trackedNodes: Node[]
+
+  constructor(nodesContainer: DocumentFragment) {
+    this.trackedNodes = [...nodesContainer.childNodes]
+
     return new Proxy(this, {
       has(target: LiveRootNodeListImpl, propertyKey: string | number | symbol): boolean {
         if (typeof propertyKey === 'number') {
@@ -603,20 +626,7 @@ class LiveRootNodeListImpl implements NodeList {
   }
 
   public entries(): IterableIterator<[number, Node]> {
-    let node: Node | null = this.firstNode
-    const {lastNode} = this
-
-    return function*(): IterableIterator<[number, Node]> {
-      let key = 0
-      while (node) {
-        yield [key, node]
-        key++
-        if (node === lastNode) {
-          break
-        }
-        node = node.nextSibling
-      }
-    }()
+    return this.trackedNodes.entries()
   }
 
   public keys(): IterableIterator<number> {
