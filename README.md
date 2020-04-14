@@ -1,6 +1,6 @@
 # Dynamic Template and Document Fragment
 
-This repository contains a proposal for more a advanced templating DOM API. The
+This repository contains a proposal for a more advanced templating DOM API. The
 proposal itself is meant to advance an already ongoing discussion on the
 subject that's happening [here](https://github.com/whatwg/html/issues/2254).
 
